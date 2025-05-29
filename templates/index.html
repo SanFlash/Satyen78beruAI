@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BeruAI - AI Answer Generator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <h1>BeruAI</h1>
+    <p>Get descriptive answers with diagrams</p>
+
+    <label>Main Topic:</label>
+    <input type="text" id="mainTopicInput" placeholder="e.g. Programming, History" />
+
+    <label>Sub-topic or Question:</label>
+    <textarea id="questionInput" placeholder="Enter your topic or question..."></textarea>
+
+    <label>Answer Style:</label>
+    <select id="styleSelect">
+      <option value="easy">Easy English</option>
+      <option value="hinglish">Hinglish</option>
+      <option value="professional">Professional</option>
+      <option value="hindi">Hindi</option>
+    </select>
+
+    <label>Programming Language (optional):</label>
+    <input type="text" id="languageInput" placeholder="e.g. Python, Java" />
+
+    <button id="generateBtn">Get Answer</button>
+
+    <div id="output">
+      <h3>Answer:</h3>
+      <div id="textAnswer"></div>
+      <h3>Related Images:</h3>
+      <div id="imageResults"></div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
