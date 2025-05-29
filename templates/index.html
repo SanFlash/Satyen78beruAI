@@ -296,6 +296,14 @@
       <div id="imageResults"></div>
     </div>
   </div>
+  <footer style="text-align: center; padding: 2% 0; font-size: 95%; color: #666;">
+  &copy; <span id="year"></span> <strong>BeruAI by Satyendra Namdeo</strong>. All rights reserved.
+</footer>
+
+<script>
+  // Dynamically update year
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
 
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
