@@ -208,79 +208,93 @@
         }
         /* === RESPONSIVE STYLES FOR MULTIPLE SCREENS === */
 
-        @media (max-width: 1024px) {
-          .container {
-            max-width: 90%;
-            padding: 25px 30px;
-          }
-        
-          textarea {
-            width: 100%;
-          }
-        
-          select,
-          button {
-            font-size: 0.95rem;
-            margin-bottom: 10px;
-          }
-        }
-        
-        @media (max-width: 768px) {
-          body {
-            margin: 20px;
-          }
-        
-          h1 {
-            font-size: 1.9rem;
-          }
-        
-          textarea {
-            height: 120px;
-            font-size: 1rem;
-          }
-        
-          select,
-          button {
-            display: block;
-            width: 100%;
-            margin: 10px 0;
-            font-size: 1rem;
-          }
-        
-          button {
-            padding: 12px;
-          }
-        }
-        
-        @media (max-width: 480px) {
-          h1 {
-            font-size: 1.6rem;
-          }
-        
-          .container {
-            padding: 20px;
-          }
-        
-          textarea {
-            font-size: 0.95rem;
-            padding: 12px;
-          }
-        
-          select,
-          button {
-            font-size: 0.95rem;
-            padding: 10px;
-          }
-        
-          #textAnswer {
-            font-size: 1rem;
-          }
-        
-          pre {
-            font-size: 0.9rem;
-            padding: 12px;
-          }
-        }
+        /* === RESPONSIVE STYLES === */
+
+@media (max-width: 1024px) {
+  .container {
+    max-width: 90%;
+    padding: 25px;
+  }
+
+  textarea {
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  select, button {
+    margin-top: 10px;
+    margin-right: 0;
+    width: 100%;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  #textAnswer {
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.6rem;
+    letter-spacing: 1px;
+  }
+
+  textarea {
+    height: 120px;
+    font-size: 0.95rem;
+  }
+
+  button, select {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+
+  .container {
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  #textAnswer {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  pre {
+    font-size: 0.9rem;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  .container {
+    padding: 15px;
+  }
+
+  textarea {
+    font-size: 0.9rem;
+    padding: 12px;
+  }
+
+  button, select {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  #textAnswer {
+    font-size: 0.95rem;
+  }
+
+  pre {
+    font-size: 0.85rem;
+  }
+}
 
 
   </style>
