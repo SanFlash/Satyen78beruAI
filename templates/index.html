@@ -206,6 +206,82 @@
                 transform: translateX(0);
             }
         }
+        /* === RESPONSIVE STYLES FOR MULTIPLE SCREENS === */
+
+        @media (max-width: 1024px) {
+          .container {
+            max-width: 90%;
+            padding: 25px 30px;
+          }
+        
+          textarea {
+            width: 100%;
+          }
+        
+          select,
+          button {
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+          }
+        }
+        
+        @media (max-width: 768px) {
+          body {
+            margin: 20px;
+          }
+        
+          h1 {
+            font-size: 1.9rem;
+          }
+        
+          textarea {
+            height: 120px;
+            font-size: 1rem;
+          }
+        
+          select,
+          button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            font-size: 1rem;
+          }
+        
+          button {
+            padding: 12px;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          h1 {
+            font-size: 1.6rem;
+          }
+        
+          .container {
+            padding: 20px;
+          }
+        
+          textarea {
+            font-size: 0.95rem;
+            padding: 12px;
+          }
+        
+          select,
+          button {
+            font-size: 0.95rem;
+            padding: 10px;
+          }
+        
+          #textAnswer {
+            font-size: 1rem;
+          }
+        
+          pre {
+            font-size: 0.9rem;
+            padding: 12px;
+          }
+        }
+
 
   </style>
 </head>
