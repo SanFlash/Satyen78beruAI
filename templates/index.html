@@ -110,6 +110,15 @@
     font-style: italic;
   }
 
+  .footer {
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
+  font-size: 14px;
+  position: relative;
+  bottom: 0;
+  width: 100%;
+}
+
+
   /* Responsive behavior */
   @media (max-width: 768px) {
     .container {
@@ -303,6 +312,11 @@
         }
     });
 </script>
+<footer class="footer bg-dark text-white mt-5 py-3">
+  <div class="container text-center">
+    <small>&copy; {{ current_year }} BeruAI by Satyendra Kumar Namdeo. All rights reserved.</small>
+  </div>
+</footer>
 
 </body>
 </html>
