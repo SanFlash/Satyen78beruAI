@@ -233,6 +233,11 @@ def save_answer():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+from datetime import datetime
+
+@app.route("/index")
+def your_page():
+    return render_template("index.html", user_name=session["user_name"], current_year=datetime.now().year)
 
 # ──────────────────────────────────────────────
 # Run the Flask app
