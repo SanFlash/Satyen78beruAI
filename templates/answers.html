@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Your Answers</title>
+  <style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+  }
+
+  h2 {
+    color: #222;
+    margin-bottom: 20px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+
+  th {
+    background-color: #2c3e50;
+    color: white;
+  }
+
+  td {
+    vertical-align: top;
+  }
+
+  button {
+    padding: 8px 12px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+
+  button:hover {
+    background-color: #2980b9;
+  }
+
+  a {
+    text-decoration: none;
+    color: #3498db;
+    font-weight: bold;
+  }
+
+  a:hover {
+    color: #21618c;
+  }
+
+  form {
+    display: inline;
+  }
+
+  /* Modal styles */
+  #answerModal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #answerModal > div {
+    background: white;
+    padding: 20px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: auto;
+    border-radius: 10px;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  #answerModal span {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  #tabButtons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  #tabButtons button {
+    padding: 6px 10px;
+    background: #ecf0f1;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  #tabButtons button.active-tab {
+    background: #2c3e50;
+    color: white;
+    border: none;
+  }
+
+  #tabContent {
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+    max-height: 60vh;
+    overflow-y: auto;
+    background: #fefefe;
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  /* Global responsive tweaks */
+  @media (max-width: 768px) {
+    table, th, td {
+      font-size: 14px;
+    }
+
+    button {
+      padding: 6px 10px;
+    }
+  }
+</style>
+  
+</head>
+<body>
+  <h2>History {{ user_name }}</h2>
+
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Select</th>
+        <th>Question</th>
+        <th>Answer Preview</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ans in answers %}
+      <tr>
+        <td><input type="checkbox" name="answer_ids" value="{{ ans.id }}"></td>
+        <td>{{ ans.question }}</td>
+        <td>{{ ans.answer[:100]|safe }}...</td>
+        <td>
+        <button type="button" onclick="showAnswer(this)" data-answer="{{ ans.answer | safe }}">View</button>
+
+        <form method="POST" action="/delete/{{ ans.id }}" style="display:inline;">
+          <button type="submit" onclick="return confirm('Delete this answer?')">Delete</button>
+        </form>
+      </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <!-- MODAL CONTAINER -->
+<div id="answerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:white; padding:20px; max-width:90%; max-height:90%; overflow:auto; border-radius:10px; position:relative;">
+    <span onclick="closeModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:20px;">&times;</span>
+    
+    <!-- Tab Buttons -->
+    <div id="tabButtons" style="margin-bottom:10px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+    
+    <!-- Tab Content -->
+    <div id="tabContent" style="border-top:1px solid #ccc; padding-top:10px;"></div>
+
+    <!-- Download Button -->
+    <button onclick="downloadCurrentAnswer()" style="margin-top:10px;">Download This Answer as PDF</button>
+  </div>
+</div>
+
+
+  <br>
+  <button type="button" onclick="submitAction('/download/combined/pdf')">Download PDF</button>
+
+  <br><br>
+  <a href="/">← Back to Home</a>
+
+  <!-- View Answer Modal -->
+  <div id="answerModal" class="modal">
+    <div class="modal-content">
+      <h3>Full Answer</h3>
+      <p id="modalAnswerContent"></p>
+      <button onclick="closeModal()">Close</button>
+    </div>
+  </div>
+  <script>
+  function showAnswer(button) {
+    const answerHtml = button.getAttribute("data-answer");
+    const modal = document.getElementById("answerModal");
+    const contentDiv = document.getElementById("modalContent");
+
+    contentDiv.innerHTML = answerHtml;
+    modal.style.display = "flex";
+  }
+
+  function closeModal() {
+    document.getElementById("answerModal").style.display = "none";
+  }
+
+  // Close modal if clicking outside the content box
+  window.onclick = function(event) {
+    const modal = document.getElementById("answerModal");
+    if (event.target === modal) {
+      closeModal();
+    }
+  }
+</script>
+  <script>
+  function submitAction(url) {
+    const checkboxes = document.querySelectorAll('input[name="answer_ids"]:checked');
+    const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+
+    if (selectedIds.length === 0) {
+      alert("Select at least one answer.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("ids", JSON.stringify(selectedIds));
+
+    fetch(url, {
+      method: "POST",
+      body: formData
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("This Feature will get updated soon...");
+      return res.blob();
+    })
+    .then(blob => {
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "answers.pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    })
+    .catch(err => alert("Error: " + err.message));
+  }
+</script>
+<script>
+  function showAnswer(button) {
+    const answer = button.getAttribute("data-answer");
+    alert(answer);
+  }
+</script>
+</body>
+</html>

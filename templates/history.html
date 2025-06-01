@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Chat History - BeruAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; }
+    h2 { color: #333; }
+    .chat-entry {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 15px;
+      background-color: #fff;
+    }
+    .chat-actions {
+      margin-top: 10px;
+    }
+    .chat-actions a, .chat-actions form {
+      margin-right: 10px;
+      display: inline-block;
+    }
+    .btn {
+      padding: 5px 10px;
+      text-decoration: none;
+      color: white;
+      background-color: #007bff;
+      border-radius: 5px;
+    }
+    .btn-danger {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <h2>Your Answer History</h2>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {% if chats %}
+    {% for chat in chats %}
+      <div class="chat-entry">
+        <strong>Date:</strong> {{ chat.timestamp }}<br>
+        <strong>Question:</strong> {{ chat.question }}<br>
+        <strong>Answer:</strong> {{ chat.answer|safe }}<br>
+
+        <div class="chat-actions">
+          <a href="{{ url_for('download_chat', chat_id=chat.id, format='pdf') }}" class="btn">Download PDF</a>
+          <a href="{{ url_for('download_chat', chat_id=chat.id, format='docx') }}" class="btn">Download DOCX</a>
+
+          <form method="POST" action="{{ url_for('delete_chat', chat_id=chat.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-danger">Delete</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No chats yet.</p>
+  {% endif %}
+
+  <a href="{{ url_for('index') }}">← Back to Home</a>
+</body>
+</html>
