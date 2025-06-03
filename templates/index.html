@@ -1,322 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>BeruAI | Home</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <style>
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f8f9fa;
-    color: #333;
-    margin: 0;
-    padding: 0;
-  }
-
-  .navbar {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    animation: slideDown 0.5s ease-out;
-  }
-
-  @keyframes slideDown {
-    0% {
-      transform: translateY(-100%);
-      opacity: 0;
+  <meta charset="UTF-8" />
+  <title>BeruAI | Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css"
+  />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8f9fa;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
+
+    .navbar {
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      animation: slideDown 0.5s ease-out;
     }
-  }
 
-  .container {
-    animation: fadeIn 0.7s ease-in;
-    max-width: 800px;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  h2 {
-    color: #2c3e50;
-    font-weight: 700;
-  }
-
-  form {
-    background: white;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    animation: bounceIn 0.8s ease;
-  }
-
-  @keyframes bounceIn {
-    0% {
-      transform: scale(0.95);
-      opacity: 0;
+    @keyframes slideDown {
+      from {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
-    100% {
-      transform: scale(1);
-      opacity: 1;
+
+    main {
+      flex: 1;
     }
-  }
 
-  input.form-control,
-  textarea.form-control,
-  select.form-select {
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    transition: border-color 0.3s ease;
-  }
-
-  input:focus,
-  textarea:focus,
-  select:focus {
-    border-color: #28a745;
-    box-shadow: 0 0 0 0.15rem rgba(40, 167, 69, 0.25);
-  }
-
-  .btn-success {
-    background: linear-gradient(45deg, #28a745, #218838);
-    border: none;
-    padding: 10px 20px;
-    font-weight: bold;
-    transition: background 0.3s ease;
-    border-radius: 6px;
-  }
-
-  .btn-success:hover {
-    background: linear-gradient(45deg, #218838, #1e7e34);
-  }
-
-  
-
-  #imageResults img {
-    max-width: 100%;
-    max-height: 100%;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    transition: transform 0.3s ease;
-  }
-
-  #imageResults img:hover {
-    transform: scale(1.05);
-  }
-
-  .form-control::placeholder {
-    color: #aaa;
-    font-style: italic;
-  }
-
-  .footer {
-  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
-  font-size: 14px;
-  position: relative;
-  bottom: 0;
-  width: 100%;
-}
-
-
-  /* Responsive behavior */
-  @media (max-width: 768px) {
     .container {
-      padding: 15px;
+      animation: fadeIn 0.7s ease-in;
+      max-width: 800px;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     form {
-      padding: 15px;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      animation: bounceIn 0.8s ease;
     }
 
-    .navbar .btn {
-      font-size: 14px;
-      padding: 6px 10px;
+    @keyframes bounceIn {
+      from {
+        transform: scale(0.95);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
 
-    h2 {
-      font-size: 1.5rem;
+    input.form-control,
+    textarea.form-control,
+    select.form-select {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: #28a745;
+      box-shadow: 0 0 0 0.15rem rgba(40, 167, 69, 0.25);
+    }
+
+    .btn-success {
+      background: linear-gradient(45deg, #28a745, #218838);
+      border: none;
+      padding: 10px 20px;
+      font-weight: bold;
+      transition: background 0.3s ease;
+      border-radius: 6px;
+    }
+
+    .btn-success:hover {
+      background: linear-gradient(45deg, #218838, #1e7e34);
+    }
+
+    .form-control::placeholder {
+      color: #aaa;
+      font-style: italic;
     }
 
     #imageResults img {
       max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      transition: transform 0.3s ease;
     }
-  }
 
-  /* Transition effect for new answers */
-  .fade-in-answer {
-    animation: fadeAnswer 0.6s ease-in;
-  }
+    #imageResults img:hover {
+      transform: scale(1.05);
+    }
 
-  @keyframes fadeAnswer {
-    0% { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
-</style>
+    .fade-in-answer {
+      animation: fadeAnswer 0.6s ease-in;
+    }
 
+    @keyframes fadeAnswer {
+      0% {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    #responseContainer table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    #responseContainer th,
+    #responseContainer td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    #responseContainer th {
+      background-color: #e9ecef;
+    }
+
+    pre code {
+      display: block;
+      padding: 1rem;
+      border-radius: 8px;
+      background-color: #1e1e1e;
+      color: #f8f8f2;
+      overflow-x: auto;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+
+      form {
+        padding: 15px;
+      }
+
+      .navbar .btn {
+        font-size: 14px;
+        padding: 6px 10px;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+      }
+    }
+
+    footer {
+      background: #212529;
+      color: #fff;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 14px;
+      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+
+    }
+  </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
     <a class="navbar-brand" href="#">BeruAI</a>
     <div class="ms-auto d-flex align-items-center">
-        <span class="text-white me-3">Hi, {{ user_name }}</span>
-        <a class="btn btn-outline-light btn-sm me-2" href="/answers">My Answers</a>
-        <a class="btn btn-outline-danger btn-sm" href="/logout">Logout</a>
+      <span class="text-white me-3">Hi, {{ user_name }}</span>
+      <a class="btn btn-outline-light btn-sm me-2" href="/answers">My Answers</a>
+      <a class="btn btn-outline-danger btn-sm" href="/logout">Logout</a>
     </div>
-</nav>
+  </nav>
 
-<div class="container py-5">
+  <main class="container py-5">
     <h2 class="mb-4 text-center">Ask Me Anything</h2>
     <form id="askForm">
-        <div class="mb-3">
-            <input
-                id="mainTopic"
-                name="mainTopic"
-                class="form-control"
-                placeholder="Enter main topic..."
-                required
-            />
-        </div>
-        <div class="mb-3">
-            <textarea
-                id="question"
-                name="question"
-                class="form-control"
-                rows="3"
-                placeholder="Enter your subtopic / question..."
-                required
-            ></textarea>
-        </div>
-        <div class="mb-3">
-            <select id="style" name="style" class="form-select">
-                <option value="easy">Easy English</option>
-                <option value="hinglish">Hinglish</option>
-                <option value="professional">Professional</option>
-                <option value="hindi">Hindi</option>
-            </select>
-        </div>
-        <!-- 🆕 Optional programming language field -->
-        <div class="mb-3">
-            <input
-                id="language"
-                name="language"
-                class="form-control"
-                placeholder="Programming Language (Optional): e.g., Python, JavaScript"
-            />
-        </div>
-        <button type="submit" class="btn btn-success">Generate Answer</button>
+      <div class="mb-3">
+        <input id="mainTopic" name="mainTopic" class="form-control" placeholder="Enter main topic..." required />
+      </div>
+      <div class="mb-3">
+        <textarea id="question" name="question" class="form-control" rows="3" placeholder="Enter your subtopic / question..." required></textarea>
+      </div>
+      <div class="mb-3">
+        <select id="style" name="style" class="form-select">
+          <option value="easy">Easy English</option>
+          <option value="hinglish">Hinglish</option>
+          <option value="professional">Professional</option>
+          <option value="hindi">Hindi</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <input id="language" name="language" class="form-control" placeholder="Programming Language (Optional): e.g., Python, JavaScript" />
+      </div>
+      <button type="submit" class="btn btn-success">Generate Answer</button>
     </form>
 
-    <div id="responseContainer" class="mt-5 border rounded p-4 bg-light" style="min-height: 150px;"></div>
+    <div id="responseContainer" class="mt-5 border rounded p-4 bg-light fade-in-answer" style="min-height: 150px;"></div>
 
     <div id="imageResults" class="mt-4 d-flex flex-wrap gap-3 justify-content-center"></div>
-</div>
+  </main>
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script>
+  <!-- Footer -->
+  <footer>
+    <div>&copy; {{ current_year }} BeruAI by Satyendra Kumar Namdeo. All rights reserved.</div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script>
+    hljs.highlightAll();
+
     async function fetchImages(query) {
-        const GOOGLE_API_KEY = "AIzaSyDzZQuDnsIgqUDyYhJ77UV9XJ0G-0M2pp0";
-        const SEARCH_ENGINE_ID = "b456c73a132774aa1";
-
-        const imageQuery = encodeURIComponent(query + " diagram OR figure OR image");
-        const url = `https://www.googleapis.com/customsearch/v1?q=${imageQuery}&cx=${SEARCH_ENGINE_ID}&searchType=image&num=3&key=${GOOGLE_API_KEY}`;
-
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-            return data.items || [];
-        } catch (err) {
-            console.error("Image fetch error:", err);
-            return [];
-        }
+      const GOOGLE_API_KEY = "AIzaSyDzZQuDnsIgqUDyYhJ77UV9XJ0G-0M2pp0";
+      const SEARCH_ENGINE_ID = "b456c73a132774aa1";
+      const imageQuery = encodeURIComponent(query + " diagram OR figure OR image");
+      const url = `https://www.googleapis.com/customsearch/v1?q=${imageQuery}&cx=${SEARCH_ENGINE_ID}&searchType=image&num=3&key=${GOOGLE_API_KEY}`;
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.items || [];
+      } catch (err) {
+        console.error("Image fetch error:", err);
+        return [];
+      }
     }
 
     function clearImages() {
-        document.getElementById("imageResults").innerHTML = "";
+      document.getElementById("imageResults").innerHTML = "";
     }
 
     function renderImages(images) {
-        const container = document.getElementById("imageResults");
-        images.forEach(item => {
-            const img = document.createElement("img");
-            img.src = item.link;
-            img.alt = item.title || "Related image";
-            img.style.maxWidth = "550px";
-            img.style.borderRadius = "8px";
-            img.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)";
-            container.appendChild(img);
-        });
+      const container = document.getElementById("imageResults");
+      images.forEach(item => {
+        const img = document.createElement("img");
+        img.src = item.link;
+        img.alt = item.title || "Related image";
+        container.appendChild(img);
+      });
     }
 
     document.getElementById("askForm").addEventListener("submit", async function (e) {
-        e.preventDefault();
+      e.preventDefault();
+      const mainTopic = document.getElementById("mainTopic").value.trim();
+      const question = document.getElementById("question").value.trim();
+      const style = document.getElementById("style").value;
+      const language = document.getElementById("language").value.trim();
 
-        const mainTopic = document.getElementById("mainTopic").value.trim();
-        const question = document.getElementById("question").value.trim();
-        const style = document.getElementById("style").value;
-        const language = document.getElementById("language").value.trim();
+      if (!mainTopic || !question) {
+        alert("Please enter both Main Topic and Question.");
+        return;
+      }
 
-        if (!mainTopic || !question) {
-            alert("Please enter both Main Topic and Question.");
-            return;
+      document.getElementById("responseContainer").innerHTML = "Generating answer...";
+      clearImages();
+
+      const fullQuestion = `Main topic: ${mainTopic}\nQuestion: ${question}`;
+      try {
+        const response = await fetch("/api/generate-answer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: fullQuestion, style, language }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          document.getElementById("responseContainer").innerHTML = `Error: ${data.error || 'Unknown error'}`;
+          return;
         }
 
-        document.getElementById("responseContainer").innerHTML = "Generating answer...";
-        clearImages();
+        document.getElementById("responseContainer").innerHTML = marked.parse(data.answer);
+        hljs.highlightAll();
 
-        const fullQuestion = `Main topic: ${mainTopic}\nQuestion: ${question}`;
-
+        // Save the answer
         try {
-            // Generate answer
-            const response = await fetch("/api/generate-answer", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ question: fullQuestion, style, language }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                document.getElementById("responseContainer").innerHTML = `Error: ${data.error || 'Unknown error'}`;
-                return;
-            }
-
-            // Display answer
-            document.getElementById("responseContainer").innerHTML = marked.parse(data.answer);
-
-            // Save answer to backend/Supabase
-            try {
-                const saveResponse = await fetch("/api/save-answer", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ question: fullQuestion, answer: data.answer })
-                });
-                const saveData = await saveResponse.json();
-                if (!saveResponse.ok) {
-                    console.warn("Failed to save answer:", saveData.error);
-                } else {
-                    console.log("Answer saved successfully");
-                }
-            } catch (saveErr) {
-                console.error("Error saving answer:", saveErr);
-            }
-
-            // Fetch and render images
-            const images = await fetchImages(question);
-            if (images.length > 0) {
-                renderImages(images);
-            }
-        } catch (error) {
-            document.getElementById("responseContainer").innerHTML = "An error occurred. Try again later.";
-            console.error(error);
+          await fetch("/api/save-answer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: fullQuestion, answer: data.answer }),
+          });
+        } catch (err) {
+          console.warn("Answer save failed:", err);
         }
-    });
-</script>
-<footer class="footer bg-dark text-white mt-5 py-3">
-  <div class="container text-center">
-    <small>&copy; {{ current_year }} BeruAI by Satyendra Kumar Namdeo. All rights reserved.</small>
-  </div>
-</footer>
 
+        const images = await fetchImages(question);
+        renderImages(images);
+      } catch (error) {
+        document.getElementById("responseContainer").innerHTML = "An error occurred. Try again later.";
+        console.error(error);
+      }
+    });
+  </script>
 </body>
 </html>
