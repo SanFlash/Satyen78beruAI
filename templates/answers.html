@@ -1,151 +1,175 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Your Answers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background-color: #f4f4f4;
-    color: #333;
-  }
+    /* General Styles */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding-bottom: 80px; /* Prevent content from hiding under fixed footer */
+      background-color: #f4f4f4;
+      color: #333;
+    }
 
-  h2 {
-    color: #222;
-    margin-bottom: 20px;
-  }
+    h2 {
+      margin: 20px;
+      color: #222;
+    }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: #fff;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  }
+    table {
+      width: 95%;
+      margin: 0 auto;
+      border-collapse: collapse;
+      background-color: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
 
-  th, td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-  }
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
 
-  th {
-    background-color: #2c3e50;
-    color: white;
-  }
-
-  td {
-    vertical-align: top;
-  }
-
-  button {
-    padding: 8px 12px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-  }
-
-  button:hover {
-    background-color: #2980b9;
-  }
-
-  a {
-    text-decoration: none;
-    color: #3498db;
-    font-weight: bold;
-  }
-
-  a:hover {
-    color: #21618c;
-  }
-
-  form {
-    display: inline;
-  }
-
-  /* Modal styles */
-  #answerModal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-  }
-
-  #answerModal > div {
-    background: white;
-    padding: 20px;
-    max-width: 90%;
-    max-height: 90%;
-    overflow: auto;
-    border-radius: 10px;
-    position: relative;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  }
-
-  #answerModal span {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-
-  #tabButtons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-
-  #tabButtons button {
-    padding: 6px 10px;
-    background: #ecf0f1;
-    color: #333;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  #tabButtons button.active-tab {
-    background: #2c3e50;
-    color: white;
-    border: none;
-  }
-
-  #tabContent {
-    border-top: 1px solid #ccc;
-    padding-top: 10px;
-    max-height: 60vh;
-    overflow-y: auto;
-    background: #fefefe;
-    padding: 10px;
-    border-radius: 4px;
-  }
-
-  /* Global responsive tweaks */
-  @media (max-width: 768px) {
-    table, th, td {
-      font-size: 14px;
+    th {
+      background-color: #2c3e50;
+      color: white;
     }
 
     button {
-      padding: 6px 10px;
+      padding: 8px 12px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
     }
-  }
-</style>
-  
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    a {
+      display: inline-block;
+      margin: 20px;
+      text-decoration: none;
+      color: #3498db;
+      font-weight: bold;
+    }
+
+    a:hover {
+      color: #21618c;
+    }
+
+    form {
+      display: inline;
+    }
+
+    /* Modal styles */
+    #answerModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #answerModal > div {
+      background: white;
+      padding: 20px;
+      max-width: 90%;
+      max-height: 90%;
+      overflow: auto;
+      border-radius: 10px;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    #answerModal span {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #tabButtons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    #tabButtons button {
+      padding: 6px 10px;
+      background: #ecf0f1;
+      color: #333;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #tabButtons button.active-tab {
+      background: #2c3e50;
+      color: white;
+      border: none;
+    }
+
+    #tabContent {
+      border-top: 1px solid #ccc;
+      padding: 10px;
+      max-height: 60vh;
+      overflow-y: auto;
+      background: #fefefe;
+      border-radius: 4px;
+    }
+
+    /* Footer */
+    .footer {
+      background-color: #2c3e50;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 14px;
+    }
+
+    .footer.fixed {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      table, th, td {
+        font-size: 14px;
+      }
+
+      button {
+        padding: 6px 10px;
+        font-size: 14px;
+      }
+
+      td {
+        word-break: break-word;
+      }
+    }
+  </style>
 </head>
 <body>
+
   <h2>History {{ user_name }}</h2>
 
-  <table border="1">
+  <table>
     <thead>
       <tr>
         <th>Select</th>
@@ -161,106 +185,127 @@
         <td>{{ ans.question }}</td>
         <td>{{ ans.answer[:100]|safe }}...</td>
         <td>
-        <button type="button" onclick="showAnswer(this)" data-answer="{{ ans.answer | safe }}">View</button>
-
-        <form method="POST" action="/delete/{{ ans.id }}" style="display:inline;">
-          <button type="submit" onclick="return confirm('Delete this answer?')">Delete</button>
-        </form>
-      </td>
+          <button type="button" onclick="showAnswer(this)" data-answer="{{ ans.answer | safe }}">View</button>
+          <form method="POST" action="/delete/{{ ans.id }}">
+            <button type="submit" onclick="return confirm('Delete this answer?')">Delete</button>
+          </form>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
-  <!-- MODAL CONTAINER -->
-<div id="answerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
-  <div style="background:white; padding:20px; max-width:90%; max-height:90%; overflow:auto; border-radius:10px; position:relative;">
-    <span onclick="closeModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:20px;">&times;</span>
-    
-    <!-- Tab Buttons -->
-    <div id="tabButtons" style="margin-bottom:10px; display:flex; flex-wrap:wrap; gap:8px;"></div>
-    
-    <!-- Tab Content -->
-    <div id="tabContent" style="border-top:1px solid #ccc; padding-top:10px;"></div>
+<input type="hidden" id="selected-ids" value="[]">
+  <div style="text-align: center; margin-top: 20px;">
+    <!-- PDF Download -->
+<button onclick="downloadFile('pdf')">Download as PDF</button>
 
-    <!-- Download Button -->
-    <button onclick="downloadCurrentAnswer()" style="margin-top:10px;">Download This Answer as PDF</button>
   </div>
-</div>
 
+  <div style="text-align: center;">
+    <a href="/">← Back to Home</a>
+  </div>
 
-  <br>
-  <button type="button" onclick="submitAction('/download/combined/pdf')">Download PDF</button>
-
-  <br><br>
-  <a href="/">← Back to Home</a>
-
-  <!-- View Answer Modal -->
-  <div id="answerModal" class="modal">
-    <div class="modal-content">
-      <h3>Full Answer</h3>
-      <p id="modalAnswerContent"></p>
-      <button onclick="closeModal()">Close</button>
+  <!-- MODAL -->
+  <div id="answerModal">
+    <div>
+      <span onclick="closeModal()">&times;</span>
+      <div id="tabButtons"></div>
+      <div id="tabContent"></div>
+      
     </div>
   </div>
+
+  <!-- Footer -->
+  <footer class="footer fixed">
+    &copy; {{ current_year }} BeruAI. All rights reserved.
+  </footer>
+
   <script>
-  function showAnswer(button) {
-    const answerHtml = button.getAttribute("data-answer");
-    const modal = document.getElementById("answerModal");
-    const contentDiv = document.getElementById("modalContent");
-
-    contentDiv.innerHTML = answerHtml;
-    modal.style.display = "flex";
-  }
-
-  function closeModal() {
-    document.getElementById("answerModal").style.display = "none";
-  }
-
-  // Close modal if clicking outside the content box
-  window.onclick = function(event) {
-    const modal = document.getElementById("answerModal");
-    if (event.target === modal) {
-      closeModal();
+    function showAnswer(button) {
+      const answerHtml = button.getAttribute("data-answer");
+      document.getElementById("tabButtons").innerHTML = '';
+      document.getElementById("tabContent").innerHTML = answerHtml;
+      document.getElementById("answerModal").style.display = "flex";
     }
-  }
-</script>
-  <script>
-  function submitAction(url) {
-    const checkboxes = document.querySelectorAll('input[name="answer_ids"]:checked');
-    const selectedIds = Array.from(checkboxes).map(cb => cb.value);
 
-    if (selectedIds.length === 0) {
-      alert("Select at least one answer.");
-      return;
+    function closeModal() {
+      document.getElementById("answerModal").style.display = "none";
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById("answerModal");
+      if (event.target === modal) closeModal();
+    }
+
+    function submitAction(url) {
+      const checkboxes = document.querySelectorAll('input[name="answer_ids"]:checked');
+      const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+
+      if (selectedIds.length === 0) {
+        alert("This Feature will get updated soon...");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("ids", JSON.stringify(selectedIds));
+
+      fetch(url, {
+        method: "POST",
+        body: formData
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("This Feature will get updated soon...");
+        return res.blob();
+      })
+      .then(blob => {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "answers.pdf";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      })
+      .catch(err => alert("Error: " + err.message));
+    }
+
+    function getSelectedIds() {
+    // You should replace this with your actual selection logic
+    // For now, let’s grab them from a hidden input
+    return JSON.parse(document.getElementById('selected-ids').value || "[]");
+}
+
+function downloadFile(type) {
+    const ids = getSelectedIds();
+    if (ids.length === 0) {
+        alert("This Feature will get updated soon...");
+        return;
     }
 
     const formData = new FormData();
-    formData.append("ids", JSON.stringify(selectedIds));
+    formData.append("ids", JSON.stringify(ids));
 
-    fetch(url, {
-      method: "POST",
-      body: formData
+    fetch(`/download/combined/${type}`, {
+        method: "POST",
+        body: formData
     })
-    .then(res => {
-      if (!res.ok) throw new Error("This Feature will get updated soon...");
-      return res.blob();
+    .then(response => {
+        if (!response.ok) throw new Error("Failed to download file.");
+        return response.blob();
     })
     .then(blob => {
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "answers.pdf";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `answers.${type}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
     })
-    .catch(err => alert("Error: " + err.message));
-  }
-</script>
-<script>
-  function showAnswer(button) {
-    const answer = button.getAttribute("data-answer");
-    alert(answer);
-  }
-</script>
+    .catch(error => {
+        alert("Error: " + error.message);
+    });
+}
+  </script>
 </body>
 </html>
