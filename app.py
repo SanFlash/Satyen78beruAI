@@ -64,7 +64,7 @@ def signup():
         }).execute()
 
         return redirect("/login")
-    return render_template("signup.html")
+    return render_template("signup.html" )
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -84,7 +84,7 @@ def login():
             return redirect("/")
         else:
             return "Invalid credentials!"
-    return render_template("login.html")
+    return render_template("login.html" , current_year=datetime.now().year)
 
 @app.route("/logout")
 def logout():
@@ -99,7 +99,8 @@ def logout():
 def home():
     if "user_id" not in session:
         return redirect("/login")
-    return render_template("index.html", user_name=session["user_name"])
+    return render_template("index.html", user_name=session["user_name"], current_year=datetime.now().year)
+
 
 @app.route("/answers")
 def answers():
@@ -107,7 +108,8 @@ def answers():
         return redirect("/login")
     user_id = session["user_id"]
     answers = supabase.table("answers").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
-    return render_template("answers.html", answers=answers.data)
+    return render_template("answers.html", user_name=session["user_name"], answers=answers.data, current_year=datetime.now().year)
+
 
 # ──────────────────────────────────────────────
 # Generate Answer and Store It
@@ -183,13 +185,16 @@ def download_combined_pdf():
     except Exception:
         return "Invalid data", 400
 
-    # Fetch answers (replace this with your Supabase or DB call)
-    # Dummy response for demonstration
-    answers = [
-        {"id": 1, "question": "What is AI?", "answer": "AI is Artificial Intelligence", "image_base64": None},
-        {"id": 2, "question": "What is Python?", "answer": "Python is a programming language", "image_base64": None}
-    ]
-    answers = [a for a in answers if str(a["id"]) in ids]
+    try:
+        response = supabase.table("answers") \
+            .select("*") \
+            .eq("user_id", session["user_id"]) \
+            .in_("id", ids) \
+            .order("created_at", desc=True) \
+            .execute()
+        answers = response.data
+    except Exception as e:
+        return f"Error fetching answers: {str(e)}", 500
 
     if not answers:
         return "No answers found", 404
@@ -204,10 +209,20 @@ def download_combined_pdf():
         pdf.multi_cell(0, 10, f"Q: {ans['question']}")
         pdf.set_font("Arial", size=12)
         pdf.multi_cell(0, 10, ans["answer"])
+        
+        image_url = ans.get("image_url")
+        if image_url:
+            try:
+                img_resp = requests.get(image_url)
+                img = Image.open(BytesIO(img_resp.content))
+                img_path = f"/tmp/temp_img_{ans['id']}.jpg"
+                img.convert("RGB").save(img_path, "JPEG")
+                pdf.image(img_path, w=150)
+            except Exception as e:
+                pdf.multi_cell(0, 10, f"[Image failed to load: {str(e)}]")
 
     pdf_data = pdf.output(dest='S').encode('latin1')
     return send_file(BytesIO(pdf_data), mimetype='application/pdf', as_attachment=True, download_name='answers.pdf')
-    
 
 
 
@@ -233,11 +248,6 @@ def save_answer():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-from datetime import datetime
-
-@app.route("/index")
-def your_page():
-    return render_template("index.html", user_name=session["user_name"], current_year=datetime.now().year)
 
 # ──────────────────────────────────────────────
 # Run the Flask app
