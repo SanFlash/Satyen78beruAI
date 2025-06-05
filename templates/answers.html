@@ -4,71 +4,75 @@
   <meta charset="UTF-8">
   <title>Your Answers</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Libraries -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.4.0/html-docx.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Style -->
   <style>
-    /* General Styles */
     body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding-bottom: 80px; /* Prevent content from hiding under fixed footer */
-      background-color: #f4f4f4;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #333;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
     }
-
-    h2 {
-      margin: 20px;
-      color: #222;
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: url('/static/background.png') no-repeat center center fixed;
+      background-size: cover;
+      opacity: 0.5;
+      z-index: -1;
     }
-
+    h2 { margin: 20px; color: #222; }
     table {
       width: 95%;
       margin: 0 auto;
       border-collapse: collapse;
       background-color: #fff;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
-
     th, td {
       padding: 12px 15px;
       text-align: left;
       border-bottom: 1px solid #ddd;
     }
-
     th {
       background-color: #2c3e50;
       color: white;
     }
-
     button {
       padding: 8px 12px;
       background-color: #3498db;
       color: white;
       border: none;
-      cursor: pointer;
       border-radius: 4px;
-      transition: background-color 0.2s ease;
+      cursor: pointer;
     }
-
     button:hover {
       background-color: #2980b9;
     }
-
     a {
       display: inline-block;
       margin: 20px;
       text-decoration: none;
-      color: #3498db;
+      color: rgb(10, 31, 44);
       font-weight: bold;
     }
+    form { display: inline; }
 
-    a:hover {
-      color: #21618c;
-    }
-
-    form {
-      display: inline;
-    }
-
-    /* Modal styles */
     #answerModal {
       display: none;
       position: fixed;
@@ -79,7 +83,6 @@
       align-items: center;
       justify-content: center;
     }
-
     #answerModal > div {
       background: white;
       padding: 20px;
@@ -88,42 +91,15 @@
       overflow: auto;
       border-radius: 10px;
       position: relative;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     }
-
     #answerModal span {
       position: absolute;
-      top: 10px;
-      right: 15px;
+      top: 10px; right: 15px;
       font-size: 20px;
       font-weight: bold;
       cursor: pointer;
     }
-
-    #tabButtons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    #tabButtons button {
-      padding: 6px 10px;
-      background: #ecf0f1;
-      color: #333;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    #tabButtons button.active-tab {
-      background: #2c3e50;
-      color: white;
-      border: none;
-    }
-
     #tabContent {
-      border-top: 1px solid #ccc;
       padding: 10px;
       max-height: 60vh;
       overflow-y: auto;
@@ -131,181 +107,238 @@
       border-radius: 4px;
     }
 
-    /* Footer */
     .footer {
       background-color: #2c3e50;
       color: white;
       text-align: center;
       padding: 15px;
       font-size: 14px;
-    }
-
-    .footer.fixed {
       position: fixed;
       bottom: 0;
-      left: 0;
       width: 100%;
-      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
     }
+    @media (max-width: 1024px) {
+  h2 {
+    font-size: 24px;
+    margin: 16px;
+  }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      table, th, td {
-        font-size: 14px;
-      }
+  button {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
 
-      button {
-        padding: 6px 10px;
-        font-size: 14px;
-      }
+  th, td {
+    padding: 10px;
+  }
 
-      td {
-        word-break: break-word;
-      }
-    }
+  #answerModal > div {
+    width: 90%;
+    height: auto;
+    max-height: 90%;
+  }
+
+  #tabContent {
+    max-height: 50vh;
+  }
+}
+
+/* Responsive styles for mobile devices */
+@media (max-width: 768px) {
+  table {
+    font-size: 14px;
+  }
+
+  th, td {
+    padding: 8px 10px;
+  }
+
+  button {
+    font-size: 13px;
+    padding: 6px 8px;
+  }
+
+  .footer {
+    font-size: 12px;
+    padding: 12px;
+  }
+
+  h2 {
+    font-size: 20px;
+    margin: 12px;
+  }
+
+  #answerModal > div {
+    padding: 15px;
+  }
+
+  #tabContent {
+    padding: 8px;
+    max-height: 40vh;
+  }
+
+  a {
+    font-size: 14px;
+    margin: 10px;
+  }
+}
+
+/* Narrow mobile (e.g., iPhone SE) */
+@media (max-width: 480px) {
+  table {
+    font-size: 13px;
+  }
+
+  th, td {
+    padding: 6px 8px;
+  }
+
+  button {
+    font-size: 12px;
+    padding: 5px 7px;
+  }
+
+  h2 {
+    font-size: 18px;
+    margin: 10px;
+  }
+
+  .footer {
+    font-size: 11px;
+    padding: 10px;
+  }
+
+  #answerModal > div {
+    padding: 10px;
+    max-width: 95%;
+  }
+
+  #tabContent {
+    padding: 6px;
+    max-height: 40vh;
+    font-size: 10px;
+  }
+
+  a {
+    font-size: 10px;
+  }
+}
   </style>
 </head>
 <body>
 
-  <h2>History {{ user_name }}</h2>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Select</th>
-        <th>Question</th>
-        <th>Answer Preview</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for ans in answers %}
-      <tr>
-        <td><input type="checkbox" name="answer_ids" value="{{ ans.id }}"></td>
-        <td>{{ ans.question }}</td>
-        <td>{{ ans.answer[:100]|safe }}...</td>
-        <td>
-          <button type="button" onclick="showAnswer(this)" data-answer="{{ ans.answer | safe }}">View</button>
-          <form method="POST" action="/delete/{{ ans.id }}">
-            <button type="submit" onclick="return confirm('Delete this answer?')">Delete</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-<input type="hidden" id="selected-ids" value="[]">
-  <div style="text-align: center; margin-top: 20px;">
-    <!-- PDF Download -->
-<button onclick="downloadFile('pdf')">Download as PDF</button>
-
-  </div>
-
-  <div style="text-align: center;">
-    <a href="/">← Back to Home</a>
-  </div>
-
-  <!-- MODAL -->
-  <div id="answerModal">
-    <div>
-      <span onclick="closeModal()">&times;</span>
-      <div id="tabButtons"></div>
-      <div id="tabContent"></div>
+<h2>History {{ user_name }}</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Select</th>
+      <th>Question</th>
       
-    </div>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ans in answers %}
+    <tr>
+      <td><input type="checkbox" name="answer_ids" value="{{ ans.id }}" data-answer="{{ ans.answer | tojson | safe }}"></td>
+      <td>{{ ans.question }}</td>
+      <td>
+        <button type="button" onclick="showAnswer(this)" data-answer='{{ ans.answer | tojson | safe }}'>View</button>
+        <form method="POST" action="/delete/{{ ans.id }}">
+          <button type="submit" onclick="return confirm('Delete this answer?')">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div style="text-align: center; margin-top: 20px;">
+  <button onclick="downloadSelected('pdf')">Download Selected as PDF</button>
+  <button onclick="downloadSelected('doc')">Download Selected as DOC</button>
+</div>
+<div style="text-align: center;"><a href="/">&larr; Back to Home</a></div>
+<br>
+<br>
+<!-- Modal -->
+<div id="answerModal">
+  <div>
+    <span onclick="closeModal()">&times;</span>
+    <div id="tabContent"></div>
   </div>
+</div>
 
-  <!-- Footer -->
-  <footer class="footer fixed">
-    &copy; {{ current_year }} BeruAI. All rights reserved.
-  </footer>
+<footer class="footer">
+  &copy; {{ current_year }} Satyen78AI by Satyendra Kumar Namdeo. All rights reserved.
+</footer>
 
-  <script>
-    function showAnswer(button) {
-      const answerHtml = button.getAttribute("data-answer");
-      document.getElementById("tabButtons").innerHTML = '';
-      document.getElementById("tabContent").innerHTML = answerHtml;
-      document.getElementById("answerModal").style.display = "flex";
-    }
+<!-- Script -->
+<script>
+function showAnswer(button) {
+  const raw = JSON.parse(button.getAttribute("data-answer"));
+  const html = marked.parse(raw);
+  const tab = document.getElementById("tabContent");
+  tab.innerHTML = html;
 
-    function closeModal() {
-      document.getElementById("answerModal").style.display = "none";
-    }
+  // Render KaTeX math
+  renderMathInElement(tab, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "$", right: "$", display: false}
+    ]
+  });
 
-    window.onclick = function(event) {
-      const modal = document.getElementById("answerModal");
-      if (event.target === modal) closeModal();
-    }
+  // Highlight code blocks
+  tab.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
 
-    function submitAction(url) {
-      const checkboxes = document.querySelectorAll('input[name="answer_ids"]:checked');
-      const selectedIds = Array.from(checkboxes).map(cb => cb.value);
-
-      if (selectedIds.length === 0) {
-        alert("This Feature will get updated soon...");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("ids", JSON.stringify(selectedIds));
-
-      fetch(url, {
-        method: "POST",
-        body: formData
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("This Feature will get updated soon...");
-        return res.blob();
-      })
-      .then(blob => {
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "answers.pdf";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-      })
-      .catch(err => alert("Error: " + err.message));
-    }
-
-    function getSelectedIds() {
-    // You should replace this with your actual selection logic
-    // For now, let’s grab them from a hidden input
-    return JSON.parse(document.getElementById('selected-ids').value || "[]");
+  // Show modal
+  document.getElementById("answerModal").style.display = "flex";
 }
 
-function downloadFile(type) {
-    const ids = getSelectedIds();
-    if (ids.length === 0) {
-        alert("This Feature will get updated soon...");
-        return;
-    }
+function closeModal() {
+  document.getElementById("answerModal").style.display = "none";
+}
 
-    const formData = new FormData();
-    formData.append("ids", JSON.stringify(ids));
+window.onclick = function(event) {
+  const modal = document.getElementById("answerModal");
+  if (event.target === modal) closeModal();
+}
 
-    fetch(`/download/combined/${type}`, {
-        method: "POST",
-        body: formData
-    })
-    .then(response => {
-        if (!response.ok) throw new Error("Failed to download file.");
-        return response.blob();
-    })
-    .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `answers.${type}`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-    })
-    .catch(error => {
-        alert("Error: " + error.message);
+function downloadSelected(type) {
+  const selected = [...document.querySelectorAll('input[name="answer_ids"]:checked')];
+  if (selected.length === 0) return alert("Select at least one answer.");
+
+  const answers = selected.map(cb => JSON.parse(cb.getAttribute("data-answer")));
+  const htmlContent = answers.map(a => marked.parse(a)).join("<hr>");
+
+  const wrapper = `<!DOCTYPE html>
+    <html><head><meta charset='utf-8'>
+    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css'>
+    </head><body>${htmlContent}</body></html>`;
+
+  if (type === 'pdf') {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    doc.html(wrapper, {
+      callback: function (doc) {
+        doc.save("answers.pdf");
+      },
+      x: 20, y: 20, width: 550
     });
+  } else {
+    const blob = htmlDocx.asBlob(wrapper);
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "answers.docx";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 }
-  </script>
+</script>
 </body>
 </html>
+
+
+
+
