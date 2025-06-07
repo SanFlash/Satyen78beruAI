@@ -19,3 +19,4 @@ fpdf
 python-docx
 pillow
 bcrypt
+markdown2
