@@ -248,6 +248,48 @@ def save_answer():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+import markdown2  
+
+@app.route('/predict', methods=['GET', 'POST'])
+def predict():
+    predicted_questions = None
+    if request.method == 'POST':
+        unit = request.form['unit']
+        level = request.form['level']
+
+        # Enhanced prompt for per-topic breakdown with 2–5 questions
+        prompt = f"""
+You are an expert academic question generator.
+
+Given the following unit-wise syllabus topics:
+
+{unit}
+
+For **each topic**, generate between **3 to 5** questions depending on complexity. All questions should be of **{level} level**. Organize them by topic with clear headings, and use **bulleted lists** for the questions. 
+Ensure formatting is clean and if applicable, include code blocks, tables, or diagrams in markdown.
+
+Example format:
+### Topic Name
+- Question 1
+- Question 2
+...
+        
+Only output the final set of questions in markdown.
+"""
+
+        try:
+            response = model.generate_content(prompt)
+            raw_text = response.text.strip()
+            html_output = markdown2.markdown(raw_text)  # Convert markdown → HTML
+            predicted_questions = html_output
+        except Exception as e:
+            predicted_questions = f"<p><strong>Error generating questions:</strong> {str(e)}</p>"
+
+    return render_template("predict.html",user_name=session["user_name"], predicted_questions=predicted_questions, current_year=datetime.now().year)
+
+@app.route('/')
+def index():
+    return render_template("predict.html", predicted_questions=None)
 
 # ──────────────────────────────────────────────
 # Run the Flask app
