@@ -14,7 +14,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.4.0/html-docx.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.4.1/html-docx.min.js"></script>
   <!-- Style -->
   <style>
     body {
@@ -209,13 +211,13 @@
   }
 
   #answerModal > div {
-    padding: 10px;
+    padding: 9px;
     max-width: 95%;
   }
 
   #tabContent {
-    padding: 6px;
-    max-height: 40vh;
+    padding: 2px;
+    max-height: 50vh;
     font-size: 10px;
   }
 
@@ -227,24 +229,23 @@
 </head>
 <body>
 
-<h2>History {{ user_name }}</h2>
+<h2>Search History ,{{ user_name }}</h2>
 <table>
   <thead>
     <tr>
       <th>Select</th>
       <th>Question</th>
-      
       <th>Actions</th>
     </tr>
   </thead>
   <tbody>
     {% for ans in answers %}
     <tr>
-      <td><input type="checkbox" name="answer_ids" value="{{ ans.id }}" data-answer="{{ ans.answer | tojson | safe }}"></td>
+      <td><input type="checkbox" name="answer_ids" value="{{ ans.id }}" data-answer='{{ ans.answer | tojson | safe }}'></td>
       <td>{{ ans.question }}</td>
       <td>
         <button type="button" onclick="showAnswer(this)" data-answer='{{ ans.answer | tojson | safe }}'>View</button>
-        <form method="POST" action="/delete/{{ ans.id }}">
+        <form method="POST" action="/delete/{{ ans.id }}" style="display:inline;">
           <button type="submit" onclick="return confirm('Delete this answer?')">Delete</button>
         </form>
       </td>
@@ -258,12 +259,12 @@
   <button onclick="downloadSelected('doc')">Download Selected as DOC</button>
 </div>
 <div style="text-align: center;"><a href="/">&larr; Back to Home</a></div>
-<br>
-<br>
+<br><br>
+
 <!-- Modal -->
-<div id="answerModal">
-  <div>
-    <span onclick="closeModal()">&times;</span>
+<div id="answerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6);">
+  <div style="background:white; margin:10% auto; padding:20px; width:60%; position:relative;">
+    <span onclick="closeModal()" style="position:absolute; right:10px; top:5px; cursor:pointer; font-size:20px;">&times;</span>
     <div id="tabContent"></div>
   </div>
 </div>
@@ -274,71 +275,50 @@
 
 <!-- Script -->
 <script>
-function showAnswer(button) {
-  const raw = JSON.parse(button.getAttribute("data-answer"));
-  const html = marked.parse(raw);
-  const tab = document.getElementById("tabContent");
-  tab.innerHTML = html;
-
-  // Render KaTeX math
-  renderMathInElement(tab, {
-    delimiters: [
-      {left: "$$", right: "$$", display: true},
-      {left: "$", right: "$", display: false}
-    ]
-  });
-
-  // Highlight code blocks
-  tab.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
-
-  // Show modal
-  document.getElementById("answerModal").style.display = "flex";
+function showAnswer(btn) {
+  const answer = JSON.parse(btn.getAttribute('data-answer'));
+  document.getElementById("tabContent").innerHTML = marked.parse(answer);
+  document.getElementById("answerModal").style.display = "block";
 }
 
 function closeModal() {
   document.getElementById("answerModal").style.display = "none";
 }
 
-window.onclick = function(event) {
-  const modal = document.getElementById("answerModal");
-  if (event.target === modal) closeModal();
-}
-
 function downloadSelected(type) {
-  const selected = [...document.querySelectorAll('input[name="answer_ids"]:checked')];
-  if (selected.length === 0) return alert("Select at least one answer.");
+    const selected = [...document.querySelectorAll('input[name="answer_ids"]:checked')];
+    if (selected.length === 0) return alert("Select at least one answer.");
 
-  const answers = selected.map(cb => JSON.parse(cb.getAttribute("data-answer")));
-  const htmlContent = answers.map(a => marked.parse(a)).join("<hr>");
+    const answers = selected.map(cb => JSON.parse(cb.getAttribute("data-answer")));
+    const htmlContent = answers.map(a => marked.parse(a)).join("<hr>");
 
-  const wrapper = `<!DOCTYPE html>
-    <html><head><meta charset='utf-8'>
-    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css'>
-    </head><body>${htmlContent}</body></html>`;
+    const wrapper = `
+      <!DOCTYPE html>
+      <html><head><meta charset='utf-8'>
+      <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css'>
+      <style>body{font-family:sans-serif; padding:20px;}</style>
+      </head><body>${htmlContent}</body></html>`;
 
-  if (type === 'pdf') {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-    doc.html(wrapper, {
-      callback: function (doc) {
-        doc.save("answers.pdf");
-      },
-      x: 20, y: 20, width: 550
-    });
-  } else {
-    const blob = htmlDocx.asBlob(wrapper);
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "answers.docx";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (type === 'pdf') {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+      doc.html(wrapper, {
+        callback: function (doc) {
+          doc.save("answers.pdf");
+        },
+        x: 20, y: 20, width: 550
+      });
+    } else {
+      const blob = window.htmlDocx.asBlob(wrapper);
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "answers.docx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   }
-}
 </script>
 </body>
 </html>
-
-
-
-
