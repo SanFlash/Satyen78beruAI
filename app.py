@@ -118,23 +118,33 @@ def answers():
 @app.route("/api/generate-answer", methods=["POST"])
 def generate_answer():
     data = request.get_json()
-    question = data.get("question")
+    question = data.get("question", "").lower()
     style = data.get("style", "")
 
     if not question:
         return jsonify({"error": "Missing question"}), 400
 
+    # Check if user is asking about the owner/developer
+    ownership_keywords = [
+        "who is the developer", "who made you", "who created you", 
+        "owner of you","owner of Satyen78AI", "developer name", "built Satyen78AI app", "creator", "founder"
+    ]
+
+    if any(kw in question for kw in ownership_keywords):
+        return jsonify({
+            "answer": "**This project was developed by Satyendra Namdeo.**"
+        })
+
     try:
         prompt = f"Explain in {style} style with examples and diagrams where needed:\n{question}"
         response = model.generate_content(
             prompt,
-            generation_config={
-                "response_mime_type": "text/plain"
-            }
+            generation_config={"response_mime_type": "text/plain"}
         )
         return jsonify({"answer": response.text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
     
 def generate_image_via_rest(prompt):
     url = "https://generativelanguage.googleapis.com/v1beta2/models/image-alpha-001:generate"
