@@ -16,7 +16,7 @@ from io import BytesIO
 from docx.shared import Inches
 from flask import abort
 import json
-
+from code_run import run_code
 
 # Load environment variables
 load_dotenv()
@@ -357,6 +357,23 @@ Only output the final set of questions in markdown.
 @app.route('/')
 def index():
     return render_template("predict.html", predicted_questions=None)
+
+
+
+@app.route("/run", methods=["POST"])
+def run():
+    data = request.get_json()
+    language = data["language"]
+    code = data["code"]
+    stdin = data.get("stdin", "")
+    return jsonify(run_code(language, code, stdin))
+
+@app.route("/run-code")
+def run_code_ui():
+    return render_template("run_code.html", user_name=session.get("user_name", "Guest"))
+
+
+
 
 # ──────────────────────────────────────────────
 # Run the Flask app
