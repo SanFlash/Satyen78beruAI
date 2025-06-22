@@ -152,6 +152,15 @@ body::before {
     animation: fadeAnswer 0.6s ease-in;
   }
 
+  .form-control, .form-select {
+      border-radius: 0.5rem;
+    }
+    #vscode-output {
+      min-height: 150px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+
   @keyframes fadeAnswer {
     0% {
       opacity: 0;
@@ -326,6 +335,46 @@ body::before {
     <div id="responseContainer" class="mt-5 border rounded p-4 bg-light fade-in-answer" style="min-height: 150px;"></div>
 
     <div id="imageResults" class="mt-4 d-flex flex-wrap gap-3 justify-content-center"></div>
+
+
+<hr class="my-5">
+<form id="vscodeForm" class="mb-5">
+  <h3 id="vscode-section" class="text-center">Code Runner</h3>
+  <div class="mb-3">
+    <div class="text-center">
+  <label for="vscode-language" class="form-label"><b>Language</b></label>
+</div>
+    <select id="vscode-language" class="form-select">
+      <option value="python">Python</option>
+      <option value="c">C</option>
+      <option value="cpp">C++</option>
+      <option value="java">Java</option>
+      <option value="javascript">JavaScript</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <div class="text-center">
+  <label for="vscode-code" class="form-label"><b>Code</b></label>
+</div>
+    <textarea id="vscode-code" class="form-control" rows="10" placeholder="Write your code here..."></textarea>
+  </div>
+
+  <div class="mb-3">
+    <div class="text-center">
+  <label for="vscode-language" class="form-label"><b>Standard Input (optional)</b></label>
+</div>
+    <textarea id="vscode-stdin" class="form-control" rows="3" placeholder="Enter stdin if any..."></textarea>
+  </div>
+</form>
+  <button class="btn btn-primary" onclick="runVscodeCode()">Run Code</button>
+
+  <div class="mt-4">
+    <h5>Output:</h5>
+    <pre id="vscode-output" class="bg-dark text-light p-3 rounded"></pre>
+    <img id="vscode-img" class="img-fluid mt-3 border rounded" style="display:none;" />
+  </div>
+    
   </main>
 
   <!-- Footer -->
@@ -418,6 +467,53 @@ body::before {
         console.error(error);
       }
     });
+
+    async function fetchImages(query) {
+    const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&cx=b456c73a132774aa1&searchType=image&num=3&key=AIzaSyDzZQuDnsIgqUDyYhJ77UV9XJ0G-0M2pp0`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      return data.items || [];
+    } catch {
+      return [];
+    }
+  }
+
+  function renderImages(images) {
+    const container = document.getElementById("imageResults");
+    container.innerHTML = "";
+    images.forEach(img => {
+      const i = document.createElement("img");
+      i.src = img.link;
+      i.alt = img.title || "Image";
+      i.className = "img-fluid rounded m-2 bg-white";
+      i.style.maxWidth = "800px";
+      container.appendChild(i);
+    });
+  }
+
+  async function runVscodeCode() {
+    const language = document.getElementById("vscode-language").value;
+    const code = document.getElementById("vscode-code").value;
+    const stdin = document.getElementById("vscode-stdin").value;
+
+    const res = await fetch("/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ language, code, stdin })
+    });
+
+    const data = await res.json();
+    document.getElementById("vscode-output").innerText = data.output;
+
+    const img = document.getElementById("vscode-img");
+    if (data.image) {
+      img.src = data.image + "?t=" + new Date().getTime();
+      img.style.display = "block";
+    } else {
+      img.style.display = "none";
+    }
+  }
   </script>
 </body>
 </html>
