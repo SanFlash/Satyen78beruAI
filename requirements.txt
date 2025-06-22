@@ -15,8 +15,13 @@ Werkzeug
 python-docx
 fpdf
 supabase
-fpdf
 python-docx
 pillow
+matplotlib
+seaborn
+numpy
+python-docx
+python-dotenv
 bcrypt
 markdown2
+Pillow
