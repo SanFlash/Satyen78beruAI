@@ -155,6 +155,7 @@ def generate_answer():
     # Gemini API keys rotation
     gemini_api_keys = [
         "AIzaSyBgWAiX5IzMeTsjxCdS-uTeyLlKucN0LmE",
+        "AIzaSyAMWlIVZsq3X-utN_ugyoEQYKsNyUHOx_E",
         "AIzaSyBx--vzqG0vLTbEDIZKFhote_G5I9G5Nm4",
         "AIzaSyCF-s-WTNdJgbjKH39WaN50MULxPcw8odE"
     ]
