@@ -35,7 +35,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key="AIzaSyBgWAiX5IzMeTsjxCdS-uTeyLlKucN0LmE")
+
 model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")
 # ──────────────────────────────────────────────
 # Routes: Auth
@@ -124,83 +124,63 @@ def generate_answer():
     if not question:
         return jsonify({"error": "Missing question"}), 400
 
-    # Check if user is asking about the owner/developer
+    # Ownership detection block (unchanged)
     ownership_keywords = [
-    "who is the developer",
-    "who made you",
-    "who created you",
-    "who is your creator",
-    "who built you",
-    "who is your developer",
-    "owner of you",
-    "owner of satyen78ai",
-    "developer of satyen78ai",
-    "developer name",
-    "created satyen78ai",
-    "built satyen78ai",
-    "founder of satyen78ai",
-    "satyen78ai creator",
-    "satyen78ai developer",
-    "who is behind satyen78ai",
-    "who owns satyen78ai",
-    "who developed satyen78ai",
-    "who programmed satyen78ai",
-    "maker of satyen78ai",
-    "who is the founder of satyen78ai",
-    "who made satyen78ai",
-    "who coded satyen78ai",
-    "satyen78ai owner",
-    "is satyen78ai made by someone",
-    "who designed satyen78ai",
-    "satyen78ai was built by",
-    "who launched satyen78ai",
-    "engineer of satyen78ai",
-    "developer info satyen78ai",
-    "satyen78ai author",
-    "satyen78ai inventor",
-    "satyen78ai maker",
-    "who's the brain behind satyen78ai",
-    "who runs satyen78ai",
-    "satyen78ai team",
-    "person behind satyen78ai",
-    "who started satyen78ai",
-    "who's responsible for satyen78ai",
-    "brains behind satyen78ai",
-    "mind behind satyen78ai",
-    "lead developer satyen78ai",
-    "lead engineer satyen78ai",
-    "who's managing satyen78ai",
-    "credits for satyen78ai",
-    "who's satyen78ai made by",
-    "who owns this app",
-    "satyen78ai founder name",
-    "who deployed satyen78ai",
-    "who initiated satyen78ai",
-    "who built this ai",
-    "satyen78ai credits",
-    "who operates satyen78ai",
-    "satyen78ai powered by",
-    "satyen78ai handled by",
-    "satyen78ai published by",
-    "made by satyen78ai",
-    "satyen78ai maintained by"
-]
-
+        "who is the developer", "who made you", "who created you", "who is your creator",
+        "who built you", "who is your developer", "owner of you", "owner of satyen78ai",
+        "developer of satyen78ai", "developer name", "created satyen78ai", "built satyen78ai",
+        "founder of satyen78ai", "satyen78ai creator", "satyen78ai developer",
+        "who is behind satyen78ai", "who owns satyen78ai", "who developed satyen78ai",
+        "who programmed satyen78ai", "maker of satyen78ai", "who is the founder of satyen78ai",
+        "who made satyen78ai", "who coded satyen78ai", "satyen78ai owner",
+        "is satyen78ai made by someone", "who designed satyen78ai", "satyen78ai was built by",
+        "who launched satyen78ai", "engineer of satyen78ai", "developer info satyen78ai",
+        "satyen78ai author", "satyen78ai inventor", "satyen78ai maker",
+        "who's the brain behind satyen78ai", "who runs satyen78ai", "satyen78ai team",
+        "person behind satyen78ai", "who started satyen78ai", "who's responsible for satyen78ai",
+        "brains behind satyen78ai", "mind behind satyen78ai", "lead developer satyen78ai",
+        "lead engineer satyen78ai", "who's managing satyen78ai", "credits for satyen78ai",
+        "who's satyen78ai made by", "who owns this app", "satyen78ai founder name",
+        "who deployed satyen78ai", "who initiated satyen78ai", "who built this ai",
+        "satyen78ai credits", "who operates satyen78ai", "satyen78ai powered by",
+        "satyen78ai handled by", "satyen78ai published by", "made by satyen78ai",
+        "satyen78ai maintained by"
+    ]
 
     if any(kw in question for kw in ownership_keywords):
         return jsonify({
             "answer": "**This project was developed by Satyendra Namdeo.**"
         })
 
-    try:
-        prompt = f"Explain in {style} style with examples and diagrams where needed:\n{question}"
-        response = model.generate_content(
-            prompt,
-            generation_config={"response_mime_type": "text/plain"}
-        )
-        return jsonify({"answer": response.text})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    # Gemini API keys rotation
+    gemini_api_keys = [
+        "AIzaSyBgWAiX5IzMeTsjxCdS-uTeyLlKucN0LmE",
+        "AIzaSyBx--vzqG0vLTbEDIZKFhote_G5I9G5Nm4",
+        "AIzaSyCF-s-WTNdJgbjKH39WaN50MULxPcw8odE"
+    ]
+
+    prompt = f"Explain in {style} style with examples and diagrams where needed:\n{question}"
+
+    for api_key in gemini_api_keys:
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=api_key)
+            
+            response = genai.GenerativeModel("gemini-1.5-flash").generate_content(
+                prompt,
+                generation_config={"response_mime_type": "text/plain"}
+            )
+            return jsonify({"answer": response.text})
+        except Exception as e:
+            # Try next key only if current one failed
+            error_msg = str(e)
+            if "quota" in error_msg.lower() or "limit" in error_msg.lower():
+                continue  # Try next key
+            else:
+                return jsonify({"error": error_msg}), 500
+
+    return jsonify({"error": "All API keys exhausted or invalid"}), 503
+
 
     
 def generate_image_via_rest(prompt):
