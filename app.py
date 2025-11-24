@@ -168,7 +168,7 @@ def generate_answer():
             import google.generativeai as genai
             genai.configure(api_key=api_key)
             
-            response = genai.GenerativeModel("gemini-1.5-flash").generate_content(
+            response = genai.GenerativeModel("gemini-2.5-flash").generate_content(
                 prompt,
                 generation_config={"response_mime_type": "text/plain"}
             )
@@ -363,5 +363,6 @@ def run_code_ui():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
