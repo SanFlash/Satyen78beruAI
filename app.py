@@ -36,7 +36,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")
+model = genai.GenerativeModel(model_name="models/gemini-2.5-flash")
 # ──────────────────────────────────────────────
 # Routes: Auth
 # ──────────────────────────────────────────────
@@ -363,4 +363,5 @@ def run_code_ui():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
