@@ -157,7 +157,8 @@ def generate_answer():
         "AIzaSyBgWAiX5IzMeTsjxCdS-uTeyLlKucN0LmE",
         "AIzaSyAMWlIVZsq3X-utN_ugyoEQYKsNyUHOx_E",
         "AIzaSyBx--vzqG0vLTbEDIZKFhote_G5I9G5Nm4",
-        "AIzaSyCF-s-WTNdJgbjKH39WaN50MULxPcw8odE"
+        "AIzaSyCF-s-WTNdJgbjKH39WaN50MULxPcw8odE",
+        "AIzaSyAFdxkSDuuJ64F-OypqVC7RVyryfLBAhgE"
     ]
 
     prompt = f"Explain in {style} style with examples and diagrams where needed:\n{question}"
@@ -362,3 +363,4 @@ def run_code_ui():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
