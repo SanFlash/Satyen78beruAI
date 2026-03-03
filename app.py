@@ -154,7 +154,7 @@ def generate_answer():
 
     # Gemini API keys rotation
     gemini_api_keys = [
-        "AIzaSyDvOtPJoMRHjChPl8Cvnit3JSJS_QL_bcE",
+        "AIzaSyBE-ECmlgb-34QDCoruhSDlUQjCSnpR218",
         "AIzaSyB6DRZeIMh1MctUoiyZWsMaxdbxeJIkH7A"
     ]
 
@@ -360,6 +360,7 @@ def run_code_ui():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
