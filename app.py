@@ -154,8 +154,7 @@ def generate_answer():
 
     # Gemini API keys rotation
     gemini_api_keys = [
-        "AIzaSyBE-ECmlgb-34QDCoruhSDlUQjCSnpR218",
-        "AIzaSyB6DRZeIMh1MctUoiyZWsMaxdbxeJIkH7A"
+        "AIzaSyAeYs6RUneJwdo8q-6fNVYb8dkMYIBqmWQ"
     ]
 
     prompt = f"Explain in {style} style with examples and diagrams where needed:\n{question}"
@@ -360,6 +359,7 @@ def run_code_ui():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
