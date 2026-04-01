@@ -154,7 +154,8 @@ def generate_answer():
 
     # Gemini API keys rotation
     gemini_api_keys = [
-        "AIzaSyB0_Gdc1QZIYxLbfkLxYu128wWB0RlCuKE"
+        "AIzaSyB0_Gdc1QZIYxLbfkLxYu128wWB0RlCuKE",
+        "AIzaSyDTbyt26R0P2KuRa2meMOdexjAQAhM8PS0"
     ]
 
     prompt = f"Explain in {style} style with examples and diagrams where needed:\n{question}"
