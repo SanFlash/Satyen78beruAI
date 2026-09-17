@@ -4,7 +4,7 @@ from datetime import datetime
 from io import BytesIO
 
 import bcrypt
-import google.generativeai as genai
+from google import genai
 import markdown2
 import requests
 from dotenv import load_dotenv
@@ -22,7 +22,7 @@ load_dotenv()
 
 
 def required_env(name: str) -> str:
-    value = os.getenv(name)
+    value = os.getenv(name, "").strip()
     if not value:
         raise RuntimeError(
             f"Missing required environment variable: {name}. "
@@ -37,8 +37,11 @@ def required_env(name: str) -> str:
 SECRET_KEY = required_env("SECRET_KEY")
 SUPABASE_URL = required_env("SUPABASE_URL")
 SUPABASE_KEY = required_env("SUPABASE_KEY")
+
+# Supports either one key or multiple comma-separated keys.
+# Example: GEMINI_API_KEYS=key1,key2,key3
 GEMINI_API_KEYS = [
-    key.strip()
+    key.strip().strip('"').strip("'")
     for key in os.getenv("GEMINI_API_KEYS", os.getenv("GEMINI_API_KEY", "")).split(",")
     if key.strip()
 ]
@@ -46,12 +49,12 @@ GEMINI_API_KEYS = [
 if not GEMINI_API_KEYS:
     raise RuntimeError(
         "Missing GEMINI_API_KEYS (or GEMINI_API_KEY). "
-        "Provide one or more comma-separated Gemini API keys in your environment."
+        "Provide one or more Gemini API keys in your environment."
     )
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "").strip()
 SEARCH_ENGINE_ID = os.getenv("SEARCH_ENGINE_ID", "").strip()
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
 
 # -----------------------------------------------------------------------------
 # Flask app
@@ -68,26 +71,33 @@ Session(app)
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-def configure_gemini(api_key: str):
-    """Configure Gemini for a single request without exposing the key to clients."""
-    genai.configure(api_key=api_key)
-    return genai.GenerativeModel(model_name=GEMINI_MODEL)
+def create_gemini_client(api_key: str):
+    """Create the current Google GenAI client using an API key.
+
+    The project previously used the deprecated google-generativeai package.
+    Google recommends the google-genai SDK for the current Gemini API and newer
+    API-key formats.
+    """
+    return genai.Client(api_key=api_key)
 
 
 def generate_with_gemini(prompt: str):
-    """Try configured Gemini keys in sequence, failing over on quota/auth errors."""
+    """Generate content with key failover and useful authentication errors."""
     last_error = None
+
     for api_key in GEMINI_API_KEYS:
         try:
-            model = configure_gemini(api_key)
-            return model.generate_content(
-                prompt,
-                generation_config={"response_mime_type": "text/plain"},
+            client = create_gemini_client(api_key)
+            return client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+                config={"response_mime_type": "text/plain"},
             )
         except Exception as exc:
             last_error = exc
-            # Quota/rate-limit/auth failures can be handled by the next configured key.
             message = str(exc).lower()
+
+            # Move to the next key for authentication, quota and transient failures.
             retryable = any(
                 marker in message
                 for marker in (
@@ -98,12 +108,29 @@ def generate_with_gemini(prompt: str):
                     "invalid api key",
                     "permission denied",
                     "unauthenticated",
+                    "access_token_type_unsupported",
+                    "401",
+                    "429",
+                    "503",
                 )
             )
             if not retryable:
                 raise
 
-    raise RuntimeError(f"All configured Gemini API keys failed: {last_error}")
+    error_text = str(last_error) if last_error else "Unknown Gemini authentication error"
+
+    # Make the common Google AQ/auth-key failure actionable without exposing keys.
+    if "access_token_type_unsupported" in error_text.lower():
+        raise RuntimeError(
+            "Gemini rejected the configured credential with "
+            "ACCESS_TOKEN_TYPE_UNSUPPORTED. The application has been migrated "
+            "to Google's current google-genai SDK. Create a fresh Gemini API key "
+            "in Google AI Studio, make sure it belongs to the Gemini API project, "
+            "and replace GEMINI_API_KEYS in your deployment environment. Do not "
+            "paste the key into source code."
+        )
+
+    raise RuntimeError(f"All configured Gemini API keys failed: {error_text}")
 
 
 # -----------------------------------------------------------------------------
