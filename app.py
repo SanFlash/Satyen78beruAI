@@ -1,130 +1,219 @@
 import os
-from flask import Flask, render_template, request, redirect, session, jsonify, send_file
-from flask_session import Session
+import json
 from datetime import datetime
 from io import BytesIO
-from fpdf import FPDF
-from docx import Document
-from supabase import create_client, Client
-from dotenv import load_dotenv
+
 import bcrypt
 import google.generativeai as genai
-import base64
+import markdown2
 import requests
+from dotenv import load_dotenv
+from flask import Flask, render_template, request, redirect, session, jsonify, send_file, abort
+from flask_session import Session
+from fpdf import FPDF
 from PIL import Image
-from io import BytesIO
-from docx.shared import Inches
-from flask import abort
-import json
+from supabase import create_client
+
 from code_run import run_code
 
-# Load environment variables
+# Load environment variables from the local environment / .env.
+# No API keys or database secrets belong in source control.
 load_dotenv()
 
-# Initialize Flask app
+
+def required_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(
+            f"Missing required environment variable: {name}. "
+            "Set it locally or in your hosting provider's environment settings."
+        )
+    return value
+
+
+# -----------------------------------------------------------------------------
+# Configuration
+# -----------------------------------------------------------------------------
+SECRET_KEY = required_env("SECRET_KEY")
+SUPABASE_URL = required_env("SUPABASE_URL")
+SUPABASE_KEY = required_env("SUPABASE_KEY")
+GEMINI_API_KEYS = [
+    key.strip()
+    for key in os.getenv("GEMINI_API_KEYS", os.getenv("GEMINI_API_KEY", "")).split(",")
+    if key.strip()
+]
+
+if not GEMINI_API_KEYS:
+    raise RuntimeError(
+        "Missing GEMINI_API_KEYS (or GEMINI_API_KEY). "
+        "Provide one or more comma-separated Gemini API keys in your environment."
+    )
+
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "").strip()
+SEARCH_ENGINE_ID = os.getenv("SEARCH_ENGINE_ID", "").strip()
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
+# -----------------------------------------------------------------------------
+# Flask app
+# -----------------------------------------------------------------------------
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY")
-app.config["SESSION_TYPE"] = "filesystem"
+app.secret_key = SECRET_KEY
+app.config.update(
+    SESSION_TYPE="filesystem",
+    SESSION_PERMANENT=False,
+    SESSION_USE_SIGNER=True,
+)
 Session(app)
 
-# Initialize Supabase client
-SUPABASE_URL = "https://eixxomrbysxndypbzqkp.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpeHhvbXJieXN4bmR5cGJ6cWtwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODY5MjQ5NiwiZXhwIjoyMDY0MjY4NDk2fQ.AMdQhzAXbTdDfeyIeABK6nfU_koyc8dJY9vZd3F4NfI"
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
+def configure_gemini(api_key: str):
+    """Configure Gemini for a single request without exposing the key to clients."""
+    genai.configure(api_key=api_key)
+    return genai.GenerativeModel(model_name=GEMINI_MODEL)
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-model = genai.GenerativeModel(model_name="models/gemini-2.5-flash")
-# ──────────────────────────────────────────────
-# Routes: Auth
-# ──────────────────────────────────────────────
+def generate_with_gemini(prompt: str):
+    """Try configured Gemini keys in sequence, failing over on quota/auth errors."""
+    last_error = None
+    for api_key in GEMINI_API_KEYS:
+        try:
+            model = configure_gemini(api_key)
+            return model.generate_content(
+                prompt,
+                generation_config={"response_mime_type": "text/plain"},
+            )
+        except Exception as exc:
+            last_error = exc
+            # Quota/rate-limit/auth failures can be handled by the next configured key.
+            message = str(exc).lower()
+            retryable = any(
+                marker in message
+                for marker in (
+                    "quota",
+                    "rate limit",
+                    "resource exhausted",
+                    "too many requests",
+                    "invalid api key",
+                    "permission denied",
+                    "unauthenticated",
+                )
+            )
+            if not retryable:
+                raise
 
+    raise RuntimeError(f"All configured Gemini API keys failed: {last_error}")
+
+
+# -----------------------------------------------------------------------------
+# Auth
+# -----------------------------------------------------------------------------
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
-        name = request.form["name"]
-        email = request.form["email"]
-        password = request.form["password"]
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
 
-        # Hash the password
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        if not name or not email or not password:
+            return "Name, email and password are required.", 400
 
-        # Check if user already exists
-        existing_user = supabase.table("users").select("*").eq("email", email).execute()
+        hashed_password = bcrypt.hashpw(
+            password.encode("utf-8"), bcrypt.gensalt()
+        ).decode("utf-8")
+
+        existing_user = (
+            supabase.table("users").select("id").eq("email", email).execute()
+        )
         if existing_user.data:
-            return "User already exists!"
+            return "User already exists!", 409
 
-        # Insert new user
-        supabase.table("users").insert({
-            "name": name,
-            "email": email,
-            "password": hashed_password
-        }).execute()
-
+        supabase.table("users").insert(
+            {"name": name, "email": email, "password": hashed_password}
+        ).execute()
         return redirect("/login")
-    return render_template("signup.html" )
+
+    return render_template("signup.html", current_year=datetime.now().year)
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form["email"]
-        password = request.form["password"]
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
 
-        # Fetch user from Supabase
         user = supabase.table("users").select("*").eq("email", email).execute()
         if not user.data:
-            return "Invalid credentials!"
+            return "Invalid credentials!", 401
 
         user_data = user.data[0]
-        if bcrypt.checkpw(password.encode('utf-8'), user_data["password"].encode('utf-8')):
+        if bcrypt.checkpw(
+            password.encode("utf-8"), user_data["password"].encode("utf-8")
+        ):
+            session.clear()
             session["user_id"] = user_data["id"]
             session["user_name"] = user_data["name"]
             return redirect("/")
-        else:
-            return "Invalid credentials!"
-    return render_template("login.html" , current_year=datetime.now().year)
+
+        return "Invalid credentials!", 401
+
+    return render_template("login.html", current_year=datetime.now().year)
+
 
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/login")
 
-# ──────────────────────────────────────────────
-# Home and Answer Dashboard
-# ──────────────────────────────────────────────
 
+# -----------------------------------------------------------------------------
+# Pages
+# -----------------------------------------------------------------------------
 @app.route("/")
 def home():
     if "user_id" not in session:
         return redirect("/login")
-    return render_template("index.html", user_name=session["user_name"], current_year=datetime.now().year)
+    return render_template(
+        "index.html",
+        user_name=session.get("user_name", "Student"),
+        current_year=datetime.now().year,
+        image_search_enabled=bool(GOOGLE_API_KEY and SEARCH_ENGINE_ID),
+    )
 
 
 @app.route("/answers")
 def answers():
     if "user_id" not in session:
         return redirect("/login")
-    user_id = session["user_id"]
-    answers = supabase.table("answers").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
-    return render_template("answers.html", user_name=session["user_name"], answers=answers.data, current_year=datetime.now().year)
+
+    response = (
+        supabase.table("answers")
+        .select("*")
+        .eq("user_id", session["user_id"])
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return render_template(
+        "answers.html",
+        user_name=session.get("user_name", "Student"),
+        answers=response.data,
+        current_year=datetime.now().year,
+    )
 
 
-# ──────────────────────────────────────────────
-# Generate Answer and Store It
-# ──────────────────────────────────────────────
-
+# -----------------------------------------------------------------------------
+# AI answer generation
+# -----------------------------------------------------------------------------
 @app.route("/api/generate-answer", methods=["POST"])
 def generate_answer():
-    data = request.get_json()
-    question = data.get("question", "").lower()
-    style = data.get("style", "")
+    data = request.get_json(silent=True) or {}
+    question = data.get("question", "").strip()
+    style = data.get("style", "").strip()
 
     if not question:
         return jsonify({"error": "Missing question"}), 400
 
-    # Ownership detection block (unchanged)
     ownership_keywords = [
         "who is the developer", "who made you", "who created you", "who is your creator",
         "who built you", "who is your developer", "owner of you", "owner of satyen78ai",
@@ -133,91 +222,118 @@ def generate_answer():
         "who is behind satyen78ai", "who owns satyen78ai", "who developed satyen78ai",
         "who programmed satyen78ai", "maker of satyen78ai", "who is the founder of satyen78ai",
         "who made satyen78ai", "who coded satyen78ai", "satyen78ai owner",
-        "is satyen78ai made by someone", "who designed satyen78ai", "satyen78ai was built by",
-        "who launched satyen78ai", "engineer of satyen78ai", "developer info satyen78ai",
-        "satyen78ai author", "satyen78ai inventor", "satyen78ai maker",
-        "who's the brain behind satyen78ai", "who runs satyen78ai", "satyen78ai team",
-        "person behind satyen78ai", "who started satyen78ai", "who's responsible for satyen78ai",
-        "brains behind satyen78ai", "mind behind satyen78ai", "lead developer satyen78ai",
-        "lead engineer satyen78ai", "who's managing satyen78ai", "credits for satyen78ai",
-        "who's satyen78ai made by", "who owns this app", "satyen78ai founder name",
-        "who deployed satyen78ai", "who initiated satyen78ai", "who built this ai",
-        "satyen78ai credits", "who operates satyen78ai", "satyen78ai powered by",
-        "satyen78ai handled by", "satyen78ai published by", "made by satyen78ai",
-        "satyen78ai maintained by"
+        "who designed satyen78ai", "who launched satyen78ai", "engineer of satyen78ai",
+        "developer info satyen78ai", "satyen78ai author", "satyen78ai inventor",
+        "satyen78ai maker", "who runs satyen78ai", "satyen78ai team", "person behind satyen78ai",
+        "who started satyen78ai", "lead developer satyen78ai", "lead engineer satyen78ai",
+        "who's managing satyen78ai", "credits for satyen78ai", "who owns this app",
+        "satyen78ai founder name", "who deployed satyen78ai", "satyen78ai credits",
+        "who operates satyen78ai", "satyen78ai powered by", "satyen78ai maintained by",
     ]
 
-    if any(kw in question for kw in ownership_keywords):
-        return jsonify({
-            "answer": "**This project was developed by Satyendra Namdeo.**"
-        })
+    normalized_question = question.lower()
+    if any(keyword in normalized_question for keyword in ownership_keywords):
+        return jsonify({"answer": "**This project was developed by Satyendra Namdeo.**"})
 
-    # Gemini API keys rotation
-    gemini_api_keys = [
-        "AIzaSyB0_Gdc1QZIYxLbfkLxYu128wWB0RlCuKE",
-        "AIzaSyDTbyt26R0P2KuRa2meMOdexjAQAhM8PS0"
-    ]
+    prompt = (
+        f"Explain in {style or 'Easy'} style with examples and diagrams where needed:\n"
+        f"{question}"
+    )
 
-    prompt = f"Explain in {style} style with examples and diagrams where needed:\n{question}"
-
-    for api_key in gemini_api_keys:
-        try:
-            import google.generativeai as genai
-            genai.configure(api_key=api_key)
-            
-            response = genai.GenerativeModel("gemini-2.5-flash").generate_content(
-                prompt,
-                generation_config={"response_mime_type": "text/plain"}
-            )
-            return jsonify({"answer": response.text})
-        except Exception as e:
-            # Try next key only if current one failed
-            error_msg = str(e)
-            if "quota" in error_msg.lower() or "limit" in error_msg.lower():
-                continue  # Try next key
-            else:
-                return jsonify({"error": error_msg}), 500
-
-    return jsonify({"error": "All API keys exhausted or invalid"}), 503
+    try:
+        response = generate_with_gemini(prompt)
+        return jsonify({"answer": response.text})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 503
 
 
-    
-def generate_image_via_rest(prompt):
-    url = "https://generativelanguage.googleapis.com/v1beta2/models/image-alpha-001:generate"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {GEMINI_API_KEY}",
-    }
-    data = {
-        "prompt": prompt,
-        "size": "512x512",
-        "candidateCount": 1,
-    }
-    response = requests.post(url, headers=headers, json=data)
-    response.raise_for_status()
-    res_json = response.json()
-    image_url = res_json["candidates"][0]["imageUri"]
-    return image_url
+# -----------------------------------------------------------------------------
+# Optional image search proxy
+# -----------------------------------------------------------------------------
+@app.route("/api/search-images", methods=["GET"])
+def search_images():
+    if not GOOGLE_API_KEY or not SEARCH_ENGINE_ID:
+        return jsonify({"items": [], "enabled": False})
 
-# ──────────────────────────────────────────────
-# Download / Delete Answer
-# ──────────────────────────────────────────────
+    query = request.args.get("q", "").strip()
+    if not query:
+        return jsonify({"items": [], "enabled": True})
 
+    try:
+        response = requests.get(
+            "https://www.googleapis.com/customsearch/v1",
+            params={
+                "q": f"{query} diagram OR figure OR image",
+                "cx": SEARCH_ENGINE_ID,
+                "searchType": "image",
+                "num": 3,
+                "key": GOOGLE_API_KEY,
+            },
+            timeout=15,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        items = [
+            {
+                "link": item.get("link"),
+                "title": item.get("title", "Related image"),
+                "contextLink": item.get("image", {}).get("contextLink"),
+            }
+            for item in payload.get("items", [])
+            if item.get("link")
+        ]
+        return jsonify({"items": items, "enabled": True})
+    except requests.RequestException:
+        return jsonify({"items": [], "enabled": True})
+
+
+# -----------------------------------------------------------------------------
+# Answers / downloads
+# -----------------------------------------------------------------------------
 @app.route("/delete/<int:id>", methods=["POST"])
 def delete_single_answer(id):
     if "user_id" not in session:
         return redirect("/login")
 
     try:
-        supabase.table("answers") \
-            .delete() \
-            .eq("user_id", session["user_id"]) \
-            .eq("id", id) \
+        (
+            supabase.table("answers")
+            .delete()
+            .eq("user_id", session["user_id"])
+            .eq("id", id)
             .execute()
-    except Exception as e:
-        return f"Error deleting answer: {str(e)}", 500
+        )
+    except Exception as exc:
+        return f"Error deleting answer: {exc}", 500
 
     return redirect("/answers")
+
+
+@app.route("/api/save-answer", methods=["POST"])
+def save_answer():
+    data = request.get_json(silent=True) or {}
+    question = data.get("question", "").strip()
+    answer = data.get("answer", "").strip()
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return jsonify({"error": "User not logged in"}), 401
+    if not question or not answer:
+        return jsonify({"error": "Question and answer are required"}), 400
+
+    try:
+        supabase.table("answers").insert(
+            {
+                "user_id": user_id,
+                "question": question,
+                "answer": answer,
+                "created_at": datetime.utcnow().isoformat(),
+            }
+        ).execute()
+        return jsonify({"message": "Answer saved successfully."})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
 
 @app.route("/download/combined/pdf", methods=["POST"])
 def download_combined_pdf():
@@ -232,78 +348,64 @@ def download_combined_pdf():
         return "Invalid data", 400
 
     try:
-        response = supabase.table("answers") \
-            .select("*") \
-            .eq("user_id", session["user_id"]) \
-            .in_("id", ids) \
-            .order("created_at", desc=True) \
+        response = (
+            supabase.table("answers")
+            .select("*")
+            .eq("user_id", session["user_id"])
+            .in_("id", ids)
+            .order("created_at", desc=True)
             .execute()
-        answers = response.data
-    except Exception as e:
-        return f"Error fetching answers: {str(e)}", 500
+        )
+        saved_answers = response.data
+    except Exception as exc:
+        return f"Error fetching answers: {exc}", 500
 
-    if not answers:
+    if not saved_answers:
         return "No answers found", 404
 
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.set_font("Arial", size=12)
 
-    for ans in answers:
+    for ans in saved_answers:
         pdf.add_page()
         pdf.set_font("Arial", "B", 14)
         pdf.multi_cell(0, 10, f"Q: {ans['question']}")
         pdf.set_font("Arial", size=12)
         pdf.multi_cell(0, 10, ans["answer"])
-        
+
         image_url = ans.get("image_url")
         if image_url:
             try:
-                img_resp = requests.get(image_url)
-                img = Image.open(BytesIO(img_resp.content))
+                img_resp = requests.get(image_url, timeout=15)
+                img_resp.raise_for_status()
+                img = Image.open(BytesIO(img_resp.content)).convert("RGB")
                 img_path = f"/tmp/temp_img_{ans['id']}.jpg"
-                img.convert("RGB").save(img_path, "JPEG")
+                img.save(img_path, "JPEG")
                 pdf.image(img_path, w=150)
-            except Exception as e:
-                pdf.multi_cell(0, 10, f"[Image failed to load: {str(e)}]")
+            except Exception:
+                pdf.multi_cell(0, 10, "[Related image could not be embedded]")
 
-    pdf_data = pdf.output(dest='S').encode('latin1')
-    return send_file(BytesIO(pdf_data), mimetype='application/pdf', as_attachment=True, download_name='answers.pdf')
+    pdf_data = pdf.output(dest="S").encode("latin1")
+    return send_file(
+        BytesIO(pdf_data),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name="answers.pdf",
+    )
 
 
-
-@app.route("/api/save-answer", methods=["POST"])
-def save_answer():
-    data = request.get_json()
-    question = data.get("question")
-    answer = data.get("answer")
-
-    user_id = session.get("user_id")  # Use user_id from session
-
-    if not user_id:
-        return jsonify({"error": "User not logged in"}), 401
-
-    try:
-        supabase.table("answers").insert({
-            "user_id": user_id,
-            "question": question,
-            "answer": answer,
-            "created_at": datetime.utcnow().isoformat()  # Optional: track creation time
-        }).execute()
-        return jsonify({"message": "Answer saved successfully."})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-import markdown2  
-
-@app.route('/predict', methods=['GET', 'POST'])
+# -----------------------------------------------------------------------------
+# Predicted questions
+# -----------------------------------------------------------------------------
+@app.route("/predict", methods=["GET", "POST"])
 def predict():
     predicted_questions = None
-    if request.method == 'POST':
-        unit = request.form['unit']
-        level = request.form['level']
 
-        # Enhanced prompt for per-topic breakdown with 2–5 questions
+    if request.method == "POST":
+        unit = request.form.get("unit", "").strip()
+        level = request.form.get("level", "").strip()
+
         prompt = f"""
 You are an expert academic question generator.
 
@@ -311,60 +413,51 @@ Given the following unit-wise syllabus topics:
 
 {unit}
 
-For **each topic**, generate between **3 to 5** questions depending on complexity. All questions should be of **{level} level**. Organize them by topic with clear headings, and use **bulleted lists** for the questions. 
-Ensure formatting is clean and if applicable, include code blocks, tables, or diagrams in markdown.
+For each topic, generate between 3 to 5 questions depending on complexity.
+All questions should be of {level} level. Organize them by topic with clear headings,
+use bulleted lists, and keep formatting clean. If applicable, include code blocks,
+tables, or diagrams in markdown.
 
-Example format:
-### Topic Name
-- Question 1
-- Question 2
-...
-        
 Only output the final set of questions in markdown.
 """
 
         try:
-            response = model.generate_content(prompt)
-            raw_text = response.text.strip()
-            html_output = markdown2.markdown(raw_text)  # Convert markdown → HTML
-            predicted_questions = html_output
-        except Exception as e:
-            predicted_questions = f"<p><strong>Error generating questions:</strong> {str(e)}</p>"
+            response = generate_with_gemini(prompt)
+            predicted_questions = markdown2.markdown(response.text.strip())
+        except Exception as exc:
+            predicted_questions = f"<p><strong>Error generating questions:</strong> {exc}</p>"
 
-    return render_template("predict.html",user_name=session["user_name"], predicted_questions=predicted_questions, current_year=datetime.now().year)
-
-@app.route('/')
-def index():
-    return render_template("predict.html", predicted_questions=None)
-
+    return render_template(
+        "predict.html",
+        user_name=session.get("user_name", "Guest"),
+        predicted_questions=predicted_questions,
+        current_year=datetime.now().year,
+    )
 
 
 @app.route("/run", methods=["POST"])
 def run():
-    data = request.get_json()
-    language = data["language"]
-    code = data["code"]
+    data = request.get_json(silent=True) or {}
+    language = data.get("language", "")
+    code = data.get("code", "")
     stdin = data.get("stdin", "")
     return jsonify(run_code(language, code, stdin))
 
+
 @app.route("/run-code")
 def run_code_ui():
-    return render_template("run_code.html", user_name=session.get("user_name", "Guest"))
+    return render_template(
+        "run_code.html", user_name=session.get("user_name", "Guest")
+    )
 
 
+@app.context_processor
+def inject_globals():
+    return {
+        "current_year": datetime.now().year,
+        "user_name": session.get("user_name", "Guest"),
+    }
 
-
-# ──────────────────────────────────────────────
-# Run the Flask app
-# ──────────────────────────────────────────────
 
 if __name__ == "__main__":
-    app.run(debug=True)
-
-
-
-
-
-
-
-
+    app.run(debug=os.getenv("FLASK_DEBUG", "0") == "1")
