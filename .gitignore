@@ -1,0 +1,30 @@
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+beru.env
+*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Flask / local runtime
+instance/
+flask_session/
+*.log
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
