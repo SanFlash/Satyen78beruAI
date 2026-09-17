@@ -23,6 +23,7 @@
     .section-card { background: rgba(255,255,255,.9); border: 1px solid rgba(20,35,55,.1); border-radius: 16px; box-shadow: 0 10px 30px rgba(16,24,40,.08); }
     #responseContainer { min-height: 150px; }
     #imageResults { align-items: flex-start; }
+    #vscode-output { min-height: 100px; white-space: pre-wrap; word-break: break-word; }
     .footer-note { background: #212529; color: #fff; text-align: center; padding: 10px 0; font-size: 14px; box-shadow: 0 -2px 6px rgba(0,0,0,.25); margin: 30px -20px -20px; }
     @media (max-width: 768px) { .navbar-brand img { height: 46px !important; } .footer-note { margin-left: -10px; margin-right: -10px; } }
   </style>
@@ -100,7 +101,7 @@
         <label for="vscode-stdin" class="form-label fw-semibold">Standard Input <span class="text-muted fw-normal">(optional)</span></label>
         <textarea id="vscode-stdin" class="form-control" rows="3" placeholder="Enter stdin if any..."></textarea>
       </div>
-      <button class="btn btn-primary" type="button" onclick="runVscodeCode()">Run Code</button>
+      <button id="runCodeBtn" class="btn btn-primary" type="button" onclick="runVscodeCode()">Run Code</button>
       <div class="mt-4">
         <h5>Output</h5>
         <pre id="vscode-output" class="bg-dark text-light p-3 rounded"></pre>
@@ -170,14 +171,52 @@
 
     async function runVscodeCode() {
       const output = document.getElementById("vscode-output");
+      const button = document.getElementById("runCodeBtn");
+      const language = document.getElementById("vscode-language").value;
+      const code = document.getElementById("vscode-code").value;
+      const stdin = document.getElementById("vscode-stdin").value;
+      const img = document.getElementById("vscode-img");
+
+      if (!code.trim()) {
+        output.textContent = "Enter some code first.";
+        return;
+      }
+
       output.textContent = "Running…";
+      button.disabled = true;
+      button.textContent = "Running…";
+      img.style.display = "none";
+
       try {
-        const res = await fetch("/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ language: document.getElementById("vscode-language").value, code: document.getElementById("vscode-code").value, stdin: document.getElementById("vscode-stdin").value }) });
-        const data = await res.json();
-        output.textContent = data.output || data.error || "No output.";
-        const img = document.getElementById("vscode-img");
-        if (data.image) { img.src = data.image + "?t=" + Date.now(); img.style.display = "block"; } else { img.style.display = "none"; }
-      } catch (error) { output.textContent = "Unable to run code right now."; }
+        const res = await fetch("/run-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ language, code, stdin })
+        });
+
+        let data;
+        try {
+          data = await res.json();
+        } catch (_) {
+          throw new Error(`Server returned HTTP ${res.status} instead of JSON.`);
+        }
+
+        if (!res.ok) {
+          throw new Error(data.error || data.output || `Code runner failed (HTTP ${res.status}).`);
+        }
+
+        output.textContent = data.output || "No output.";
+        if (data.image) {
+          img.src = data.image + "?t=" + Date.now();
+          img.style.display = "block";
+        }
+      } catch (error) {
+        output.textContent = error.message || "Unable to run code right now.";
+        console.error("Code runner error:", error);
+      } finally {
+        button.disabled = false;
+        button.textContent = "Run Code";
+      }
     }
   </script>
 </body>
